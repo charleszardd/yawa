@@ -66,6 +66,34 @@ For normal daily use, start the background agent from Yawa UI. Pressing a config
 
 > **Important:** A shortcut works globally only while the agent is running and only if Windows or another application does not already own it. `Ctrl+1` is supported, but it is a poor default because browsers, editors, and terminals commonly use it for tab switching. Prefer defaults such as `Ctrl+Alt+1`. `yawa` must report collisions without preventing other valid bindings from loading. A normal user process does not operate on the Windows secure desktop and should not elevate itself automatically.
 
+### Open a saved project in VS Code
+
+VS Code project and folder arguments must be sent through its [`code` command-line interface](https://code.visualstudio.com/docs/configure/command-line), not directly to the `Code.exe` GUI executable. Current Yawa releases automatically prefer the CLI when **Visual Studio Code** is selected from the application list. For a command created by an older release, replace the Application value with `code` and save it again.
+
+Configure the command in Yawa UI as follows:
+
+- **Action type:** `Exec`
+- **Application:** `code`
+- **Arguments:** one argument per line, as shown below
+- **Shortcut:** any available global shortcut, such as `Ctrl+Alt+2`
+
+```text
+--new-window
+C:\Users\your-name\Projects\your-repository
+```
+
+Click **Save** and confirm that Yawa reports `Command saved. Background shortcuts reloaded.` The equivalent TOML is:
+
+```toml
+[[commands]]
+name = "open-project"
+description = "Open a saved repository in VS Code"
+type = "exec"
+executable = "code"
+args = ["--new-window", 'C:\Users\your-name\Projects\your-repository']
+hotkey = "Ctrl+Alt+2"
+```
+
 ## Product assessment
 
 This is a good project for Go and a useful Windows tool. It has a narrow core and a clear user benefit. Go is especially suitable for the configuration, CLI, validation, process management, and concurrency layers. The Win32 and COM integration stays behind focused Windows-only interfaces rather than leaking into the command engine.
@@ -144,7 +172,7 @@ Every command is a user-defined alias to an **action**. None of the actions know
 | `open_path`   | Open a configured file or directory with its Windows default associated application, or Explorer | Open Downloads, a PDF, or a spreadsheet                               |
 | `url`         | Open a valid URL in default browser                                                              | GitHub, documentation                                                 |
 
-The `executable` can be an absolute path (recommended for GUI apps), or a known application available on PATH. Use `exec.Command` with separate arguments; for Windows shell-associated files/URLs, use `ShellExecuteEx` or equivalent. A selected path is substituted into **one** argument, never concatenated into shell text.
+The `executable` can be an absolute path (recommended for GUI apps), or a known application available on PATH. Applications with a dedicated CLI may require that CLI to process arguments; for example, use `code` rather than `Code.exe` when opening a VS Code project. Use `exec.Command` with separate arguments; for Windows shell-associated files/URLs, use `ShellExecuteEx` or equivalent. A selected path is substituted into **one** argument, never concatenated into shell text.
 
 ### Editable configuration
 
@@ -286,7 +314,7 @@ Prerequisites:
 
 1. Install a supported Go release.
 2. Install Visual Studio Code (optional, used by example commands).
-3. Ensure the VS Code `code` CLI is available in your `PATH`, or configure the absolute executable path.
+3. Ensure the VS Code `code` CLI is available in your `PATH` when using the VS Code examples. Do not substitute `Code.exe` for commands that pass a project or folder path.
 4. Install GNU Make if you want to use the development shortcuts below.
 
 ### Development with Make
@@ -343,7 +371,7 @@ Launch the Wails settings application after building:
 .\dist\yawa-ui.exe
 ```
 
-The UI can create, search, edit, validate, test, and delete commands. It detects common installed applications, provides a native `.exe` browser, and validates executable paths before saving. Fields change with the selected action type, and picker actions explain the required `{selected_path}` argument. Saved changes are written atomically to the same `%APPDATA%\yawa\config.toml` used by the CLI.
+The UI can create, search, edit, validate, test, and delete commands. It detects common installed applications, prefers the VS Code CLI so project arguments are handled correctly, provides a native `.exe` browser, and validates executable paths before saving. Fields change with the selected action type, and picker actions explain the required `{selected_path}` argument. Saved changes are written atomically to the same `%APPDATA%\yawa\config.toml` used by the CLI.
 
 Use the sidebar to start, reload, or stop the background agent. Saving a command reloads a running agent automatically. **Start with Windows** is opt-in and per-user. The settings window does not need to remain open for shortcuts to work; use the tray icon to reopen Yawa, reload shortcuts, or exit.
 
