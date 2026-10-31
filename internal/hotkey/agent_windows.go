@@ -62,6 +62,10 @@ func NewAgent(dispatcher command.Dispatcher, output io.Writer, logger *slog.Logg
 }
 
 func (agent Agent) Run(ctx context.Context, registry command.Registry) error {
+	return agent.RunWithReady(ctx, registry, nil)
+}
+
+func (agent Agent) RunWithReady(ctx context.Context, registry command.Registry, onReady func()) error {
 	mutex, err := acquireAgentMutex()
 	if err != nil {
 		return err
@@ -76,6 +80,9 @@ func (agent Agent) Run(ctx context.Context, registry command.Registry) error {
 		return err
 	}
 	defer unregisterAll(registeredCommands)
+	if onReady != nil {
+		onReady()
+	}
 
 	jobs := make(chan command.Definition, jobQueueCapacity)
 	var workers sync.WaitGroup
@@ -96,6 +103,19 @@ func (agent Agent) Run(ctx context.Context, registry command.Registry) error {
 	close(jobs)
 	workers.Wait()
 	return err
+}
+
+func IsRunning() bool {
+	name, err := windows.UTF16PtrFromString(`Local\yawa-agent`)
+	if err != nil {
+		return false
+	}
+	handle, err := windows.OpenMutex(windows.SYNCHRONIZE, false, name)
+	if err != nil {
+		return false
+	}
+	windows.CloseHandle(handle)
+	return true
 }
 
 func (agent Agent) registerCommands(commands []command.Definition) (map[uintptr]command.Definition, error) {

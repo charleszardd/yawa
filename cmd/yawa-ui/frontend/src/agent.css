@@ -1,0 +1,89 @@
+.agent-card {
+  border: 1px solid #2a303d;
+  border-radius: 10px;
+  background: #121722;
+  padding: 12px;
+  margin: 12px 0;
+}
+
+.agent-heading {
+  display: grid;
+  grid-template-columns: 10px 1fr;
+  gap: 9px;
+  align-items: start;
+}
+
+.agent-heading strong {
+  display: block;
+  font-size: 12px;
+}
+
+.agent-heading small {
+  display: block;
+  color: #737b8b;
+  font-size: 10px;
+  line-height: 1.35;
+  margin-top: 3px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #697181;
+  margin-top: 4px;
+}
+
+.status-dot.running {
+  background: #55d69c;
+  box-shadow: 0 0 10px #55d69c88;
+}
+
+.status-dot.warning {
+  background: #f6b94a;
+  box-shadow: 0 0 10px #f6b94a66;
+}
+
+.agent-actions {
+  display: grid;
+  grid-template-columns: 1fr 34px;
+  gap: 7px;
+  margin-top: 11px;
+}
+
+.agent-actions button {
+  height: 32px;
+  border: 1px solid #303746;
+  border-radius: 7px;
+  background: #1a202b;
+  color: #dfe3ec;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font: 600 11px "Segoe UI";
+  cursor: pointer;
+}
+
+.agent-actions button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.agent-actions .stop-agent {
+  color: #ff8069;
+}
+
+.startup-toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #9da4b2;
+  font-size: 11px;
+  margin-top: 11px;
+  cursor: pointer;
+}
+
+.startup-toggle input {
+  accent-color: #ff5d3a;
+}

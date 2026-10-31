@@ -6,6 +6,7 @@ import (
 	"sort"
 
 	"github.com/charleszardd/yawa/internal/appcatalog"
+	"github.com/charleszardd/yawa/internal/background"
 	"github.com/charleszardd/yawa/internal/command"
 	"github.com/charleszardd/yawa/internal/config"
 	"github.com/charleszardd/yawa/internal/dialogs"
@@ -47,6 +48,39 @@ func (service *Service) BrowseExecutable() (string, error) {
 		return "", nil
 	}
 	return path, nil
+}
+
+func (service *Service) AgentStatus() background.Status {
+	return (background.Manager{}).Status()
+}
+
+func (service *Service) StartAgent() error {
+	return (background.Manager{}).Start()
+}
+
+func (service *Service) ReloadAgent() error {
+	return (background.Manager{}).Reload()
+}
+
+func (service *Service) StopAgent() error {
+	return (background.Manager{}).Stop()
+}
+
+func (service *Service) SetStartWithWindows(enabled bool) error {
+	manager := background.Manager{}
+	if err := manager.SetStartWithWindows(enabled); err != nil {
+		return err
+	}
+	if enabled {
+		if err := manager.Start(); err != nil {
+			rollbackErr := manager.SetStartWithWindows(false)
+			if rollbackErr != nil {
+				return fmt.Errorf("start background agent: %w; rollback Windows startup setting: %v", err, rollbackErr)
+			}
+			return err
+		}
+	}
+	return nil
 }
 
 func (service *Service) Load() (Snapshot, error) {

@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"embed"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/charleszardd/yawa/internal/command"
 	"github.com/charleszardd/yawa/internal/config"
@@ -16,6 +18,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 	windowsoptions "github.com/wailsapp/wails/v2/pkg/options/windows"
+	wailsruntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 //go:embed all:frontend/dist
@@ -29,6 +32,8 @@ func main() {
 	}
 	windowsLauncher := launcher.Windows{}
 	service := ui.NewService(configPath, command.NewDispatcher(windowsLauncher, dialogs.Picker{}))
+	var contextMutex sync.RWMutex
+	var applicationContext context.Context
 	cacheDirectory, err := os.UserCacheDir()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -45,9 +50,23 @@ func main() {
 		AssetServer:      &assetserver.Options{Assets: frontendAssets},
 		BackgroundColour: &options.RGBA{R: 12, G: 15, B: 22, A: 255},
 		Bind:             []interface{}{service},
-		Debug:            options.Debug{OpenInspectorOnStartup: os.Getenv("YAWA_DEBUG") == "1"},
+		OnStartup: func(ctx context.Context) {
+			contextMutex.Lock()
+			applicationContext = ctx
+			contextMutex.Unlock()
+		},
+		Debug: options.Debug{OpenInspectorOnStartup: os.Getenv("YAWA_DEBUG") == "1"},
 		SingleInstanceLock: &options.SingleInstanceLock{
 			UniqueId: "4f9ca656-9425-4c03-a53a-f72368391be1",
+			OnSecondInstanceLaunch: func(options.SecondInstanceData) {
+				contextMutex.RLock()
+				ctx := applicationContext
+				contextMutex.RUnlock()
+				if ctx != nil {
+					wailsruntime.WindowUnminimise(ctx)
+					wailsruntime.WindowShow(ctx)
+				}
+			},
 		},
 		Windows: &windowsoptions.Options{
 			WebviewUserDataPath:  webviewDataPath,
