@@ -301,6 +301,29 @@ Prerequisites:
 1. Install a supported Go release.
 2. Install Visual Studio Code (optional, used by example commands).
 3. Ensure the VS Code `code` CLI is available in your `PATH`, or configure the absolute executable path.
+4. Install GNU Make if you want to use the development shortcuts below.
+
+### Development with Make
+
+These commands run from source and do not use `dist`:
+
+```powershell
+make frontend-install       # First-time frontend dependency setup
+make check                  # Frontend build, Go tests, and static analysis
+make ui                     # Run the Wails settings UI from source
+make agent                  # Run the global hotkey agent from source
+make cli ARGS="list"        # Run any CLI command
+make cli ARGS="run code"    # Execute a configured command
+```
+
+Use a non-default configuration when needed:
+
+```powershell
+make validate CONFIG=".\configs\example.toml"
+make agent CONFIG=".\configs\example.toml"
+```
+
+`make build` is optional and writes development executables to the ignored `bin\` directory. Production/release artifacts remain the responsibility of `scripts\build.ps1`.
 
 ```powershell
 # Verify environment
