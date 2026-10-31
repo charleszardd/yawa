@@ -306,7 +306,7 @@ go version
 where.exe code
 
 # Clone and enter the project (replace <owner> with the repository owner)
-git clone https://github.com/<owner>/yawa.git
+git clone https://github.com/charleszardd/yawa.git
 cd yawa
 
 # After implementing the files shown above:
@@ -322,7 +322,7 @@ go build -trimpath -o .\bin\yawa.exe .\cmd\yawa
 .\bin\yawa.exe agent
 ```
 
-When bootstrapping a new repository rather than cloning one, run `go mod init github.com/<owner>/yawa` once using the final hosting path.
+The Go module path is `github.com/charleszardd/yawa` and must stay aligned with the repository URL.
 
 **Make the command available everywhere:** Add the absolute `yawa\bin` directory to your user `PATH`, open a fresh terminal, then run `yawa list`. Do not overwrite the existing PATH value.
 

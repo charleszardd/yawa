@@ -1,0 +1,22 @@
+[general]
+config_version = 1
+log_level = "info"
+
+[[commands]]
+name = "calculator"
+description = "Open Windows Calculator"
+type = "exec"
+executable = "calc.exe"
+args = []
+
+[[commands]]
+name = "downloads"
+description = "Open the Downloads directory"
+type = "open_path"
+path = '%USERPROFILE%\Downloads'
+
+[[commands]]
+name = "github"
+description = "Open GitHub"
+type = "url"
+url = "https://github.com"
