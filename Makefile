@@ -1,4 +1,4 @@
-SHELL := pwsh.exe
+SHELL := powershell.exe
 .SHELLFLAGS := -NoProfile -Command
 
 GO ?= go
@@ -13,7 +13,7 @@ CONFIG_FLAG := $(if $(CONFIG),--config "$(CONFIG)",)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help test vet check format tidy frontend-install frontend-build cli validate agent ui build build-cli build-ui clean
+.PHONY: help test vet check format tidy frontend-install frontend-build cli validate agent background-agent ui build build-cli build-agent build-ui clean
 
 help: ## Show available development commands
 	@Write-Output "Yawa development commands:"; Get-Content '$(MAKEFILE_LIST)' | Select-String '^[a-zA-Z_-]+:.*## ' | ForEach-Object { $$parts = $$_.Line -split ':.*## ', 2; '  {0,-20} {1}' -f $$parts[0], $$parts[1] }
@@ -47,16 +47,22 @@ validate: ## Validate the active config; optionally pass CONFIG=C:\path\config.t
 agent: ## Run the global hotkey agent directly from source
 	$(GO) run ./cmd/yawa $(CONFIG_FLAG) agent
 
+background-agent: ## Run the managed tray agent directly from source
+	$(GO) run ./cmd/yawa-agent
+
 ui: frontend-build ## Run the Wails customization UI directly from source
 	$(GO) run -tags production ./cmd/yawa-ui
 
-build: build-cli build-ui ## Build development executables into bin/
+build: build-cli build-agent build-ui ## Build development executables into bin/
 
-build-cli: ## Build the CLI and agent into bin/yawa.exe
+build-cli: ## Build the CLI into bin/yawa.exe
 	New-Item -ItemType Directory -Force '$(BIN_DIR)' | Out-Null; $(GO) build -trimpath -ldflags '-X main.version=$(VERSION)' -o '$(BIN_DIR)/yawa.exe' ./cmd/yawa
 
+build-agent: ## Build the headless tray agent into bin/yawa-agent.exe
+	New-Item -ItemType Directory -Force '$(BIN_DIR)' | Out-Null; $(GO) build -trimpath -ldflags '-H windowsgui' -o '$(BIN_DIR)/yawa-agent.exe' ./cmd/yawa-agent
+
 build-ui: frontend-build ## Build the Wails UI into bin/yawa-ui.exe
-	New-Item -ItemType Directory -Force '$(BIN_DIR)' | Out-Null; $(GO) build -tags production -trimpath -o '$(BIN_DIR)/yawa-ui.exe' ./cmd/yawa-ui
+	New-Item -ItemType Directory -Force '$(BIN_DIR)' | Out-Null; $(GO) build -tags production -trimpath -ldflags '-H windowsgui' -o '$(BIN_DIR)/yawa-ui.exe' ./cmd/yawa-ui
 
 clean: ## Remove generated development executables and frontend output
 	if (Test-Path -LiteralPath '$(BIN_DIR)') { Remove-Item -Recurse -Force -LiteralPath '$(BIN_DIR)' }; if (Test-Path -LiteralPath '$(FRONTEND_DIR)/dist') { Remove-Item -Recurse -Force -LiteralPath '$(FRONTEND_DIR)/dist' }

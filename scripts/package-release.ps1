@@ -13,6 +13,7 @@ $archivePath = Join-Path $resolvedOutputDirectory $archiveName
 
 $packageFiles = @(
     (Join-Path $resolvedBuildDirectory "yawa.exe"),
+    (Join-Path $resolvedBuildDirectory "yawa-agent.exe"),
     (Join-Path $resolvedBuildDirectory "yawa-ui.exe"),
     (Join-Path $resolvedBuildDirectory "SHA256SUMS")
 )

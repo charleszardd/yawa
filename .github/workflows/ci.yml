@@ -27,5 +27,9 @@ jobs:
         run: npm run build
       - run: go test ./...
       - run: go vet ./...
+      - name: Create build output directory
+        shell: pwsh
+        run: New-Item -ItemType Directory -Force .\dist | Out-Null
       - run: go build -trimpath -o dist/yawa.exe ./cmd/yawa
-      - run: go build -tags production -trimpath -o dist/yawa-ui.exe ./cmd/yawa-ui
+      - run: go build -trimpath -ldflags "-H windowsgui" -o dist/yawa-agent.exe ./cmd/yawa-agent
+      - run: go build -tags production -trimpath -ldflags "-H windowsgui" -o dist/yawa-ui.exe ./cmd/yawa-ui

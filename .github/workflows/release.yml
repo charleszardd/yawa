@@ -46,6 +46,11 @@ jobs:
           if ($reportedVersion -notlike "*$env:GITHUB_REF_NAME*") {
             throw "Installed CLI reported unexpected version: $reportedVersion"
           }
+          foreach ($executable in @("yawa.exe", "yawa-agent.exe", "yawa-ui.exe")) {
+            if (-not (Test-Path -LiteralPath (Join-Path $installDirectory $executable) -PathType Leaf)) {
+              throw "Installed release is missing $executable"
+            }
+          }
       - name: Publish GitHub release
         shell: pwsh
         env:

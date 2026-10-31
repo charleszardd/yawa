@@ -95,7 +95,7 @@ try {
     New-Item -ItemType Directory -Path $extractionDirectory | Out-Null
     try {
         Expand-Archive -LiteralPath $PackagePath -DestinationPath $extractionDirectory
-        $requiredExecutables = @("yawa.exe", "yawa-ui.exe")
+        $requiredExecutables = @("yawa.exe", "yawa-agent.exe", "yawa-ui.exe")
         foreach ($executable in $requiredExecutables) {
             $sourcePath = Join-Path $extractionDirectory $executable
             if (-not (Test-Path -LiteralPath $sourcePath -PathType Leaf)) {
@@ -132,7 +132,7 @@ try {
         Write-Output "Created Start menu shortcut: $shortcutPath"
     }
     Write-Output "Run the customization UI with: yawa-ui"
-    Write-Output "Run global hotkeys with: yawa agent"
+    Write-Output "Start global shortcuts from the Yawa UI, then optionally enable Start with Windows."
 } finally {
     if ($temporaryDirectory -and (Test-Path -LiteralPath $temporaryDirectory)) {
         Remove-Item -Recurse -Force -LiteralPath $temporaryDirectory

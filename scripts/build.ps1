@@ -27,15 +27,19 @@ try {
     $binaryPath = Join-Path $resolvedOutput "yawa.exe"
     go build -trimpath -ldflags "-s -w -X main.version=$Version" -o $binaryPath .\cmd\yawa
     if ($LASTEXITCODE -ne 0) { throw "CLI build failed with exit code $LASTEXITCODE" }
+    $agentBinaryPath = Join-Path $resolvedOutput "yawa-agent.exe"
+    go build -trimpath -ldflags "-s -w -H windowsgui" -o $agentBinaryPath .\cmd\yawa-agent
+    if ($LASTEXITCODE -ne 0) { throw "background agent build failed with exit code $LASTEXITCODE" }
     $uiBinaryPath = Join-Path $resolvedOutput "yawa-ui.exe"
-    go build -tags production -trimpath -ldflags "-s -w" -o $uiBinaryPath .\cmd\yawa-ui
+    go build -tags production -trimpath -ldflags "-s -w -H windowsgui" -o $uiBinaryPath .\cmd\yawa-ui
     if ($LASTEXITCODE -ne 0) { throw "UI build failed with exit code $LASTEXITCODE" }
-    $checksums = @($binaryPath, $uiBinaryPath) | ForEach-Object {
+    $checksums = @($binaryPath, $agentBinaryPath, $uiBinaryPath) | ForEach-Object {
         $checksum = (Get-FileHash -Algorithm SHA256 -LiteralPath $_).Hash.ToLowerInvariant()
         "$checksum  $(Split-Path -Leaf $_)"
     }
     Set-Content -LiteralPath (Join-Path $resolvedOutput "SHA256SUMS") -Value $checksums
     Write-Output "Built $binaryPath"
+    Write-Output "Built $agentBinaryPath"
     Write-Output "Built $uiBinaryPath"
 } finally {
     Pop-Location
