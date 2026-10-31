@@ -37,7 +37,7 @@ func (app *application) newAddCommand() *cobra.Command {
 	addCommand := &cobra.Command{
 		Use:   "add <name>",
 		Short: "Add a command",
-		Args:  cobra.ExactArgs(1),
+		Args:  exactArgs(1),
 		RunE: func(_ *cobra.Command, args []string) error {
 			configuredCommand := options.definition(args[0])
 			return app.mutateConfiguration(func(configuration *config.File) error {
@@ -59,7 +59,7 @@ func (app *application) newEditCommand() *cobra.Command {
 	editCommand := &cobra.Command{
 		Use:   "edit <name>",
 		Short: "Edit a command",
-		Args:  cobra.ExactArgs(1),
+		Args:  exactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return app.mutateConfiguration(func(configuration *config.File) error {
 				registry := command.NewRegistry(configuration.Commands)
@@ -82,7 +82,7 @@ func (app *application) newShowCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "show <name>",
 		Short: "Show a command",
-		Args:  cobra.ExactArgs(1),
+		Args:  exactArgs(1),
 		RunE: func(_ *cobra.Command, args []string) error {
 			registry, err := app.loadRegistry()
 			if err != nil {
@@ -101,7 +101,7 @@ func (app *application) newRemoveCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "remove <name>",
 		Short: "Remove a command",
-		Args:  cobra.ExactArgs(1),
+		Args:  exactArgs(1),
 		RunE: func(_ *cobra.Command, args []string) error {
 			return app.mutateConfiguration(func(configuration *config.File) error {
 				updatedCommands, err := command.Remove(configuration.Commands, args[0])

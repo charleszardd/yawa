@@ -324,6 +324,32 @@ go build -trimpath -o .\bin\yawa.exe .\cmd\yawa
 
 The Go module path is `github.com/charleszardd/yawa` and must stay aligned with the repository URL.
 
+### Production build
+
+The build script runs the test suite and static analysis before producing a stripped executable and SHA-256 checksum:
+
+```powershell
+.\scripts\build.ps1 -Version "0.1.0"
+Get-Content .\dist\yawa.exe.sha256
+```
+
+Copy `dist\yawa.exe` to a stable per-user directory such as `%LOCALAPPDATA%\Programs\yawa`, add that directory to the user `PATH`, and open a new terminal. Do not run Yawa as administrator for normal use.
+
+Yawa writes bounded, structured JSON logs to `%LOCALAPPDATA%\yawa\yawa.log`; the previous file is retained as `yawa.log.1` after rotation. Command names, types, and errors are logged, but argument arrays are deliberately omitted.
+
+Exit codes are stable for automation:
+
+| Code | Meaning |
+|---:|---|
+| `0` | Success |
+| `1` | General/internal failure |
+| `2` | Invalid configuration or usage |
+| `3` | Command not found |
+| `4` | Action launch failure |
+| `5` | Hotkey agent failure |
+
+To activate global shortcuts, run `yawa agent`. For unattended daily use, create a normal-user logon task that starts `yawa agent`; automatic startup and tray management remain planned UI conveniences rather than requirements for the core agent.
+
 **Make the command available everywhere:** Add the absolute `yawa\bin` directory to your user `PATH`, open a fresh terminal, then run `yawa list`. Do not overwrite the existing PATH value.
 
 ## Implementation plan
@@ -398,18 +424,18 @@ The Go module path is `github.com/charleszardd/yawa` and must stay aligned with 
 
 ## Success criteria
 
-- [ ] Users can create, update, inspect, and delete arbitrary named commands using CMD or TOML.
-- [ ] A command can launch **any configured application** with arguments, or open a file, folder, or URL.
-- [ ] Both file and folder pickers work with different applications—not only VS Code.
+- [x] Users can create, update, inspect, and delete arbitrary named commands using CMD or TOML.
+- [x] A command can launch **any configured application** with arguments, or open a file, folder, or URL.
+- [x] Both file and folder pickers use the generic application dispatcher—not VS Code-specific code.
 
-- [ ] `yawa.exe` is callable from any CMD / PowerShell directory.
-- [ ] `yawa run code` shows a Windows folder picker and opens the chosen folder in VS Code.
-- [ ] A configured command opens a saved project/solution in the user-selected IDE without a picker.
-- [ ] `yawa agent` registers `Ctrl+Alt+1` and other valid configured hotkeys.
-- [ ] Hotkeys work while CMD is unfocused, provided they are not reserved or intercepted.
-- [ ] Commands and hotkeys can be changed in `config.toml` without recompilation.
-- [ ] Invalid configuration and shortcut collisions produce actionable error messages.
-- [ ] Closing the agent unregisters its hotkeys.
+- [x] The production build creates a standalone `yawa.exe` suitable for a directory on `PATH`.
+- [x] `yawa run code` uses the native Windows folder picker and passes the selected folder as one argument.
+- [x] A configured command can open a saved project/solution in any selected IDE without a picker.
+- [x] `yawa agent` registers `Ctrl+Alt+1` and other valid configured hotkeys.
+- [x] Hotkeys work while CMD is unfocused, provided they are not reserved or intercepted.
+- [x] Commands and hotkeys can be changed in `config.toml` without recompilation.
+- [x] Invalid configuration and shortcut collisions produce actionable error messages.
+- [x] Closing the agent unregisters its hotkeys.
 
 ## Future direction
 

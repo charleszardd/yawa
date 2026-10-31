@@ -36,7 +36,7 @@ func (spy *launcherSpy) Execute(_ context.Context, executable string, arguments 
 
 func TestDispatcherSubstitutesPickedPathAsOneArgument(t *testing.T) {
 	spy := &launcherSpy{}
-	picker := &pickerStub{path: `C:\Projects\Project With Spaces`, selected: true}
+	picker := &pickerStub{path: `C:\Projects\Yawa nga Proyekto 😈`, selected: true}
 	dispatcher := NewDispatcher(spy, picker)
 	configuredCommand := Definition{
 		Name: "code", Type: TypePickFolder, Executable: "code.exe",

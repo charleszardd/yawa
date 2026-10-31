@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"hash/fnv"
 	"io"
+	"log/slog"
 	"runtime"
 	"sync"
 	"syscall"
@@ -53,10 +54,11 @@ type message struct {
 type Agent struct {
 	dispatcher command.Dispatcher
 	output     io.Writer
+	logger     *slog.Logger
 }
 
-func NewAgent(dispatcher command.Dispatcher, output io.Writer) Agent {
-	return Agent{dispatcher: dispatcher, output: output}
+func NewAgent(dispatcher command.Dispatcher, output io.Writer, logger *slog.Logger) Agent {
+	return Agent{dispatcher: dispatcher, output: output, logger: logger}
 }
 
 func (agent Agent) Run(ctx context.Context, registry command.Registry) error {
@@ -83,8 +85,10 @@ func (agent Agent) Run(ctx context.Context, registry command.Registry) error {
 	threadID, _, _ := getCurrentThreadID.Call()
 	var pending message
 	peekMessage.Call(uintptr(unsafe.Pointer(&pending)), 0, 0, 0, peekNoRemove)
+	loopContext, cancelLoop := context.WithCancel(ctx)
+	defer cancelLoop()
 	go func() {
-		<-ctx.Done()
+		<-loopContext.Done()
 		postThreadMessage.Call(threadID, messageQuit, 0, 0)
 	}()
 
@@ -111,10 +115,12 @@ func (agent Agent) registerCommands(commands []command.Definition) (map[uintptr]
 		result, _, callErr := registerHotKey.Call(0, identifier, uintptr(binding.Modifiers), uintptr(binding.VirtualKey))
 		if result == 0 {
 			fmt.Fprintf(agent.output, "hotkey unavailable: %s -> %s (%v)\n", configuredCommand.Hotkey, configuredCommand.Name, callErr)
+			agent.logger.Warn("hotkey unavailable", "hotkey", configuredCommand.Hotkey, "command", configuredCommand.Name, "error", callErr)
 			continue
 		}
 		registered[identifier] = configuredCommand
 		fmt.Fprintf(agent.output, "hotkey registered: %s -> %s\n", configuredCommand.Hotkey, configuredCommand.Name)
+		agent.logger.Info("hotkey registered", "hotkey", configuredCommand.Hotkey, "command", configuredCommand.Name)
 	}
 	if len(registered) == 0 {
 		return nil, fmt.Errorf("no hotkeys were registered")
@@ -143,6 +149,7 @@ func (agent Agent) messageLoop(commands map[uintptr]command.Definition, jobs cha
 		case jobs <- configuredCommand:
 		default:
 			fmt.Fprintf(agent.output, "hotkey ignored because the action queue is full: %s\n", configuredCommand.Name)
+			agent.logger.Warn("hotkey action queue full", "command", configuredCommand.Name)
 		}
 	}
 }
@@ -152,6 +159,7 @@ func (agent Agent) runWorker(jobs <-chan command.Definition, waitGroup *sync.Wai
 	for configuredCommand := range jobs {
 		if err := agent.dispatcher.Dispatch(context.Background(), configuredCommand); err != nil {
 			fmt.Fprintf(agent.output, "command failed: %s: %v\n", configuredCommand.Name, err)
+			agent.logger.Error("hotkey command failed", "command", configuredCommand.Name, "error", err)
 		}
 	}
 }

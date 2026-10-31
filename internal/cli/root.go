@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -14,6 +15,7 @@ import (
 	"github.com/charleszardd/yawa/internal/dialogs"
 	"github.com/charleszardd/yawa/internal/hotkey"
 	"github.com/charleszardd/yawa/internal/launcher"
+	"github.com/charleszardd/yawa/internal/logging"
 	"github.com/spf13/cobra"
 )
 
@@ -23,6 +25,7 @@ type application struct {
 	launcher   command.Launcher
 	dispatcher command.Dispatcher
 	stdout     io.Writer
+	logger     *slog.Logger
 }
 
 func Execute(version string, stdout io.Writer, stderr io.Writer) error {
@@ -32,18 +35,27 @@ func Execute(version string, stdout io.Writer, stderr io.Writer) error {
 	}
 
 	windowsLauncher := launcher.Windows{}
+	logger, logFile, err := logging.Open()
+	if err != nil {
+		return err
+	}
+	defer logFile.Close()
 	app := &application{
 		configPath: configPath,
 		store:      config.NewStore(),
 		launcher:   windowsLauncher,
 		dispatcher: command.NewDispatcher(windowsLauncher, dialogs.Picker{}),
 		stdout:     stdout,
+		logger:     logger,
 	}
 	rootCommand := app.newRootCommand(version)
 	rootCommand.SetOut(stdout)
 	rootCommand.SetErr(stderr)
 	rootCommand.SilenceErrors = true
 	rootCommand.SilenceUsage = true
+	rootCommand.SetFlagErrorFunc(func(_ *cobra.Command, err error) error {
+		return withExitCode(ExitUsage, err)
+	})
 	return rootCommand.Execute()
 }
 
@@ -71,16 +83,16 @@ func (app *application) newAgentCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "agent",
 		Short: "Run the global hotkey agent",
-		Args:  cobra.NoArgs,
+		Args:  noArgs,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			registry, err := app.loadRegistry()
 			if err != nil {
-				return err
+				return withExitCode(ExitUsage, err)
 			}
 			ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 			defer stop()
 			fmt.Fprintln(app.stdout, "yawa agent is running; press Ctrl+C to stop")
-			return hotkey.NewAgent(app.dispatcher, app.stdout).Run(ctx, registry)
+			return withExitCode(ExitAgent, hotkey.NewAgent(app.dispatcher, app.stdout, app.logger).Run(ctx, registry))
 		},
 	}
 }
@@ -89,11 +101,11 @@ func (app *application) newListCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "list",
 		Short: "List configured commands",
-		Args:  cobra.NoArgs,
+		Args:  noArgs,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			registry, err := app.loadRegistry()
 			if err != nil {
-				return err
+				return withExitCode(ExitUsage, err)
 			}
 			writer := tabwriter.NewWriter(app.stdout, 0, 4, 2, ' ', 0)
 			fmt.Fprintln(writer, "NAME\tHOTKEY\tTYPE\tDESCRIPTION")
@@ -109,17 +121,23 @@ func (app *application) newRunCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "run <command-name>",
 		Short: "Run a configured command",
-		Args:  cobra.ExactArgs(1),
+		Args:  exactArgs(1),
 		RunE: func(_ *cobra.Command, args []string) error {
 			registry, err := app.loadRegistry()
 			if err != nil {
-				return err
+				return withExitCode(ExitUsage, err)
 			}
 			configuredCommand, found := registry.Find(args[0])
 			if !found {
-				return fmt.Errorf("command %q is not configured", args[0])
+				return withExitCode(ExitNotFound, fmt.Errorf("command %q is not configured", args[0]))
 			}
-			return app.dispatcher.Dispatch(context.Background(), configuredCommand)
+			app.logger.Info("command started", "command", configuredCommand.Name, "type", configuredCommand.Type)
+			if err := app.dispatcher.Dispatch(context.Background(), configuredCommand); err != nil {
+				app.logger.Error("command failed", "command", configuredCommand.Name, "type", configuredCommand.Type, "error", err)
+				return withExitCode(ExitExecution, err)
+			}
+			app.logger.Info("command launched", "command", configuredCommand.Name, "type", configuredCommand.Type)
+			return nil
 		},
 	}
 }
@@ -128,7 +146,7 @@ func (app *application) newValidateCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "validate",
 		Short: "Validate the configuration file",
-		Args:  cobra.NoArgs,
+		Args:  noArgs,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			if _, err := app.loadRegistry(); err != nil {
 				return err
@@ -144,7 +162,7 @@ func (app *application) newConfigCommand() *cobra.Command {
 	configCommand.AddCommand(&cobra.Command{
 		Use:   "path",
 		Short: "Print the active configuration file path",
-		Args:  cobra.NoArgs,
+		Args:  noArgs,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			_, err := fmt.Fprintln(app.stdout, app.configPath)
 			return err
@@ -153,7 +171,7 @@ func (app *application) newConfigCommand() *cobra.Command {
 	configCommand.AddCommand(&cobra.Command{
 		Use:   "edit",
 		Short: "Open the configuration file in its associated editor",
-		Args:  cobra.NoArgs,
+		Args:  noArgs,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			if err := app.ensureConfigExists(); err != nil {
 				return err
