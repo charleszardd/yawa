@@ -4,7 +4,7 @@
 
 # yawa - a customizable Windows hotkey launcher
 
-**Why “yawa”?** `Yawa` is the Bisaya word I blurt out when a laptop full of open apps freezes while I am searching for—or reopening—something. Yawa turns that frustration into configurable commands and global shortcuts.
+**Why “yawa”?** `Yawa` is the Bisaya word I blurt out when a laptop full of open apps freezes while I am searching or reopening something. Yawa turns that frustration into configurable commands and global shortcuts.
 
 > A fast, local-first Windows 11 launcher built with Go. Open projects, applications, folders, files, and URLs from the terminal or configurable global shortcuts.
 
