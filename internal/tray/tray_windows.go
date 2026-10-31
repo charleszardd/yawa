@@ -44,7 +44,7 @@ const (
 
 	defaultApplicationIcon = 32512
 	defaultArrowCursor     = 32512
-	applicationIconID      = 1
+	applicationIconID      = 32512
 )
 
 var (

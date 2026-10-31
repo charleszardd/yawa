@@ -9,6 +9,8 @@ import (
 	"image/color"
 	"image/png"
 	"os"
+
+	"github.com/tc-hib/winres"
 )
 
 var iconSizes = []int{16, 20, 24, 32, 40, 48, 64, 128, 256}
@@ -22,6 +24,8 @@ func main() {
 	inputPath := flag.String("input", "", "source PNG path")
 	iconPath := flag.String("ico-output", "", "destination ICO path")
 	pngPath := flag.String("png-output", "", "optional destination for a 256px PNG")
+	resourcePath := flag.String("syso-output", "", "optional destination for a Windows amd64 resource object")
+	resourceID := flag.Uint("resource-id", 32512, "Windows icon group resource ID")
 	flag.Parse()
 
 	if *inputPath == "" || *iconPath == "" {
@@ -38,11 +42,49 @@ func main() {
 	if err := writeICO(*iconPath, images); err != nil {
 		fatal(err.Error())
 	}
+	if *resourcePath != "" {
+		if *resourceID > 65535 {
+			fatal("-resource-id must be between 0 and 65535")
+		}
+		if err := writeWindowsResource(*iconPath, *resourcePath, uint16(*resourceID)); err != nil {
+			fatal(err.Error())
+		}
+	}
 	if *pngPath != "" {
 		if err := os.WriteFile(*pngPath, images[len(images)-1].data, 0o644); err != nil {
 			fatal(fmt.Sprintf("write PNG: %v", err))
 		}
 	}
+}
+
+func writeWindowsResource(iconPath, resourcePath string, resourceID uint16) error {
+	iconFile, err := os.Open(iconPath)
+	if err != nil {
+		return fmt.Errorf("open ICO for Windows resource: %w", err)
+	}
+	defer iconFile.Close()
+
+	icon, err := winres.LoadICO(iconFile)
+	if err != nil {
+		return fmt.Errorf("load ICO for Windows resource: %w", err)
+	}
+	resources := winres.ResourceSet{}
+	if err := resources.SetIcon(winres.ID(resourceID), icon); err != nil {
+		return fmt.Errorf("set Windows icon resource: %w", err)
+	}
+	resourceFile, err := os.Create(resourcePath)
+	if err != nil {
+		return fmt.Errorf("create Windows resource: %w", err)
+	}
+	if err := resources.WriteObject(resourceFile, winres.ArchAMD64); err != nil {
+		resourceFile.Close()
+		_ = os.Remove(resourcePath)
+		return fmt.Errorf("write Windows resource: %w", err)
+	}
+	if err := resourceFile.Close(); err != nil {
+		return fmt.Errorf("close Windows resource: %w", err)
+	}
+	return nil
 }
 
 func decodePNG(path string) (image.Image, error) {
