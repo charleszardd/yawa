@@ -226,7 +226,7 @@ hotkey = "Ctrl+Alt+G"
 
 ### Customization workflows
 
-**From CMD (implemented in Phase 2):**
+**From CMD :**
 
 ```bat
 yawa command add calculator --type exec --exe calc.exe
