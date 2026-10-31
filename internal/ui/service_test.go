@@ -2,11 +2,33 @@ package ui
 
 import (
 	"context"
+	"encoding/json"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/charleszardd/yawa/internal/command"
 )
+
+func TestServiceLoadSerializesEmptyCommandsAsArray(t *testing.T) {
+	service := NewService(filepath.Join(t.TempDir(), "config.toml"), command.NewDispatcher(launcherStub{}))
+
+	snapshot, err := service.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	if snapshot.Commands == nil {
+		t.Fatal("Load().Commands = nil, want an empty slice")
+	}
+
+	encodedSnapshot, err := json.Marshal(snapshot)
+	if err != nil {
+		t.Fatalf("json.Marshal() error = %v", err)
+	}
+	if !strings.Contains(string(encodedSnapshot), `"commands":[]`) {
+		t.Fatalf("json.Marshal() = %s, want commands to be an array", encodedSnapshot)
+	}
+}
 
 type launcherStub struct{}
 

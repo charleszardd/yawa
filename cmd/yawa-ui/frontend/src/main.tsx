@@ -5,8 +5,9 @@ import './style.css';
 
 type ActionType='exec'|'pick_folder'|'pick_file'|'open_path'|'url';
 type CommandDefinition={name:string;description:string;type:ActionType;executable:string;args:string[];working_dir:string;path:string;url:string;hotkey:string;start_dir:string};
+type SnapshotResponse={configPath:string;commands:CommandDefinition[]|null};
 type Snapshot={configPath:string;commands:CommandDefinition[]};
-declare global { interface Window { go:{ui:{Service:{Load:()=>Promise<Snapshot>;Save:(command:CommandDefinition,originalName:string)=>Promise<void>;Delete:(name:string)=>Promise<void>;Run:(name:string)=>Promise<void>}}}} }
+declare global { interface Window { go:{ui:{Service:{Load:()=>Promise<SnapshotResponse>;Save:(command:CommandDefinition,originalName:string)=>Promise<void>;Delete:(name:string)=>Promise<void>;Run:(name:string)=>Promise<void>}}}} }
 
 const emptyCommand=():CommandDefinition=>({name:'',description:'',type:'exec',executable:'',args:[],working_dir:'',path:'',url:'',hotkey:'',start_dir:''});
 const service=()=>window.go.ui.Service;
@@ -16,7 +17,7 @@ function App(){
   const [selected,setSelected]=useState(''); const [draft,setDraft]=useState(emptyCommand());
   const [query,setQuery]=useState(''); const [busy,setBusy]=useState(false); const [notice,setNotice]=useState(''); const [error,setError]=useState('');
   const filtered=useMemo(()=>snapshot.commands.filter(c=>(c.name+' '+c.description+' '+c.hotkey).toLowerCase().includes(query.toLowerCase())),[snapshot,query]);
-  const load=async()=>{try{setSnapshot(await service().Load())}catch(e){setError(String(e))}};
+  const load=async()=>{try{const response=await service().Load();setSnapshot({...response,commands:response.commands??[]})}catch(e){setError(String(e))}};
   useEffect(()=>{load()},[]);
   const edit=(command:CommandDefinition)=>{setSelected(command.name);setDraft({...emptyCommand(),...command,args:command.args||[]});setError('');setNotice('')};
   const create=()=>{setSelected('');setDraft(emptyCommand());setError('');setNotice('')};

@@ -34,7 +34,8 @@ func (service *Service) Load() (Snapshot, error) {
 			return Snapshot{}, err
 		}
 	}
-	commands := append([]command.Definition(nil), configuration.Commands...)
+	commands := make([]command.Definition, len(configuration.Commands))
+	copy(commands, configuration.Commands)
 	sort.Slice(commands, func(left, right int) bool { return commands[left].Name < commands[right].Name })
 	return Snapshot{ConfigPath: service.configPath, Commands: commands}, nil
 }
