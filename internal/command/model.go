@@ -11,14 +11,14 @@ const (
 )
 
 type Definition struct {
-	Name        string   `toml:"name"`
-	Description string   `toml:"description,omitempty"`
-	Type        Type     `toml:"type"`
-	Executable  string   `toml:"executable,omitempty"`
-	Arguments   []string `toml:"args,omitempty"`
-	WorkingDir  string   `toml:"working_dir,omitempty"`
-	Path        string   `toml:"path,omitempty"`
-	URL         string   `toml:"url,omitempty"`
-	Hotkey      string   `toml:"hotkey,omitempty"`
-	StartDir    string   `toml:"start_dir,omitempty"`
+	Name        string   `toml:"name" json:"name"`
+	Description string   `toml:"description,omitempty" json:"description"`
+	Type        Type     `toml:"type" json:"type"`
+	Executable  string   `toml:"executable,omitempty" json:"executable"`
+	Arguments   []string `toml:"args,omitempty" json:"args"`
+	WorkingDir  string   `toml:"working_dir,omitempty" json:"working_dir"`
+	Path        string   `toml:"path,omitempty" json:"path"`
+	URL         string   `toml:"url,omitempty" json:"url"`
+	Hotkey      string   `toml:"hotkey,omitempty" json:"hotkey"`
+	StartDir    string   `toml:"start_dir,omitempty" json:"start_dir"`
 }

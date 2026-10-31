@@ -2,6 +2,8 @@
 
 > A fast, local-first Windows 11 launcher built with Go. Open projects, applications, folders, files, and URLs from the terminal or configurable global shortcuts.
 
+Yawa includes two executables: `yawa.exe` for the CLI and resident hotkey agent, and `yawa-ui.exe` for visual command customization. Both operate on the same configuration file.
+
 ## Overview
 
 `yawa` is a small Windows `.exe` that lets you:
@@ -330,10 +332,34 @@ The build script runs the test suite and static analysis before producing a stri
 
 ```powershell
 .\scripts\build.ps1 -Version "0.1.0"
-Get-Content .\dist\yawa.exe.sha256
+Get-Content .\dist\SHA256SUMS
 ```
 
 Copy `dist\yawa.exe` to a stable per-user directory such as `%LOCALAPPDATA%\Programs\yawa`, add that directory to the user `PATH`, and open a new terminal. Do not run Yawa as administrator for normal use.
+
+### Desktop customization UI
+
+Launch the Wails settings application after building:
+
+```powershell
+.\dist\yawa-ui.exe
+```
+
+The UI can create, search, edit, validate, test, and delete commands. Fields change with the selected action type, and picker actions explain the required `{selected_path}` argument. Saved changes are written atomically to the same `%APPDATA%\yawa\config.toml` used by the CLI.
+
+Restart a running `yawa agent` after changing a hotkey. The settings window does not need to remain open for shortcuts to work.
+
+UI development uses Wails v2 and React with TypeScript:
+
+```powershell
+cd .\cmd\yawa-ui\frontend
+npm ci
+npm run build
+cd ..\..\..
+go build -tags production -o .\dist\yawa-ui.exe .\cmd\yawa-ui
+```
+
+Windows 11 normally includes the required WebView2 runtime. Use `wails doctor` if the UI cannot initialize its webview.
 
 Yawa writes bounded, structured JSON logs to `%LOCALAPPDATA%\yawa\yawa.log`; the previous file is retained as `yawa.log.1` after rotation. Command names, types, and errors are logged, but argument arrays are deliberately omitted.
 
