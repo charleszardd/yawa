@@ -19,10 +19,14 @@ func (Loader) Load(path string) (File, error) {
 		return File{}, fmt.Errorf("read configuration %s: %w", path, err)
 	}
 
+	return (Loader{}).Decode(path, contents)
+}
+
+func (Loader) Decode(source string, contents []byte) (File, error) {
 	var configuration File
 	metadata, err := toml.Decode(string(contents), &configuration)
 	if err != nil {
-		return File{}, fmt.Errorf("parse configuration %s: %w", path, err)
+		return File{}, fmt.Errorf("parse configuration %s: %w", source, err)
 	}
 	if undecodedKeys := metadata.Undecoded(); len(undecodedKeys) > 0 {
 		return File{}, fmt.Errorf("configuration contains unknown field %q", undecodedKeys[0])

@@ -14,7 +14,8 @@ import (
 
 type application struct {
 	configPath string
-	loader     config.Loader
+	store      config.Store
+	launcher   command.Launcher
 	dispatcher command.Dispatcher
 	stdout     io.Writer
 }
@@ -25,10 +26,12 @@ func Execute(version string, stdout io.Writer, stderr io.Writer) error {
 		return err
 	}
 
+	windowsLauncher := launcher.Windows{}
 	app := &application{
 		configPath: configPath,
-		loader:     config.Loader{},
-		dispatcher: command.NewDispatcher(launcher.Windows{}),
+		store:      config.NewStore(),
+		launcher:   windowsLauncher,
+		dispatcher: command.NewDispatcher(windowsLauncher),
 		stdout:     stdout,
 	}
 	rootCommand := app.newRootCommand(version)
@@ -53,6 +56,7 @@ func (app *application) newRootCommand(version string) *cobra.Command {
 		app.newRunCommand(),
 		app.newValidateCommand(),
 		app.newConfigCommand(),
+		app.newCommandManagementCommand(),
 	)
 	return rootCommand
 }
@@ -122,11 +126,22 @@ func (app *application) newConfigCommand() *cobra.Command {
 			return err
 		},
 	})
+	configCommand.AddCommand(&cobra.Command{
+		Use:   "edit",
+		Short: "Open the configuration file in its associated editor",
+		Args:  cobra.NoArgs,
+		RunE: func(_ *cobra.Command, _ []string) error {
+			if err := app.ensureConfigExists(); err != nil {
+				return err
+			}
+			return app.launcher.OpenPath(app.configPath)
+		},
+	})
 	return configCommand
 }
 
 func (app *application) loadRegistry() (command.Registry, error) {
-	configuration, err := app.loader.Load(app.configPath)
+	configuration, _, err := app.store.Load(app.configPath)
 	if err != nil {
 		return command.Registry{}, err
 	}
@@ -134,4 +149,15 @@ func (app *application) loadRegistry() (command.Registry, error) {
 		return command.Registry{}, fmt.Errorf("validate configuration: %w", err)
 	}
 	return command.NewRegistry(configuration.Commands), nil
+}
+
+func (app *application) ensureConfigExists() error {
+	configuration, revision, err := app.store.LoadOrDefault(app.configPath)
+	if err != nil {
+		return err
+	}
+	if revision != (config.Revision{}) {
+		return nil
+	}
+	return app.store.Save(app.configPath, configuration, revision)
 }
