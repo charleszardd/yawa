@@ -4,6 +4,18 @@
 
 Yawa includes two executables: `yawa.exe` for the CLI and resident hotkey agent, and `yawa-ui.exe` for visual command customization. Both operate on the same configuration file.
 
+## Install on Windows 11
+
+Download the installer from the latest GitHub Release, then run it. The installer verifies the release archive's SHA-256 checksum, installs both executables under `%LOCALAPPDATA%\Programs\yawa`, adds that directory to your user `PATH`, and creates a **Yawa UI** Start menu shortcut.
+
+```powershell
+$installer = Join-Path $env:TEMP "install-yawa.ps1"
+Invoke-WebRequest "https://github.com/charleszardd/yawa/releases/latest/download/install.ps1" -OutFile $installer
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installer
+```
+
+Open a new terminal after installation. Start the editor with `yawa-ui` and keep global shortcuts active with `yawa agent`. Yawa does not require administrator privileges and does not automatically add itself to Windows startup.
+
 ## Overview
 
 `yawa` is a small Windows `.exe` that lets you:
@@ -359,6 +371,18 @@ Get-Content .\dist\SHA256SUMS
 ```
 
 Copy `dist\yawa.exe` to a stable per-user directory such as `%LOCALAPPDATA%\Programs\yawa`, add that directory to the user `PATH`, and open a new terminal. Do not run Yawa as administrator for normal use.
+
+### Publish a GitHub release
+
+Tags matching `v*.*.*` trigger the Windows release workflow. It repeats the production checks, creates `yawa-windows-amd64.zip`, publishes its SHA-256 checksum and installer, and creates the GitHub Release.
+
+```powershell
+git push origin main
+git tag -a v0.1.0 -m "Yawa v0.1.0"
+git push origin v0.1.0
+```
+
+Use a new semantic version for every release; do not move or reuse an existing tag. The workflow is defined in `.github\workflows\release.yml`.
 
 ### Desktop customization UI
 

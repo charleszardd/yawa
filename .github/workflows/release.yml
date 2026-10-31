@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: cmd/yawa-ui/frontend/package-lock.json
+      - name: Build and verify Windows executables
+        shell: pwsh
+        run: .\scripts\build.ps1 -Version $env:GITHUB_REF_NAME -OutputDirectory ".\dist"
+      - name: Package release assets
+        shell: pwsh
+        run: .\scripts\package-release.ps1 -BuildDirectory ".\dist" -OutputDirectory ".\release"
+      - name: Smoke-test packaged installer
+        shell: pwsh
+        run: |
+          $installDirectory = Join-Path $env:RUNNER_TEMP "yawa-install"
+          .\scripts\install.ps1 `
+            -PackagePath ".\release\yawa-windows-amd64.zip" `
+            -ChecksumPath ".\release\yawa-windows-amd64.zip.sha256" `
+            -InstallDirectory $installDirectory `
+            -SkipPathUpdate `
+            -SkipShortcut
+          $reportedVersion = & (Join-Path $installDirectory "yawa.exe") --version
+          if ($reportedVersion -notlike "*$env:GITHUB_REF_NAME*") {
+            throw "Installed CLI reported unexpected version: $reportedVersion"
+          }
+      - name: Publish GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create $env:GITHUB_REF_NAME
+          --verify-tag
+          --generate-notes
+          .\release\yawa-windows-amd64.zip
+          .\release\yawa-windows-amd64.zip.sha256
+          .\release\install.ps1
