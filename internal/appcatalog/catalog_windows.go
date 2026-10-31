@@ -50,9 +50,11 @@ func commonApplicationCandidates() []candidate {
 	windowsDirectory := os.Getenv("WINDIR")
 	return []candidate{
 		{name: "Visual Studio Code", paths: []string{
+			filepath.Join(localAppData, `Programs\Microsoft VS Code\bin\code.cmd`),
+			filepath.Join(programFiles, `Microsoft VS Code\bin\code.cmd`),
+			"code",
 			filepath.Join(localAppData, `Programs\Microsoft VS Code\Code.exe`),
 			filepath.Join(programFiles, `Microsoft VS Code\Code.exe`),
-			"code",
 		}},
 		{name: "Google Chrome", paths: []string{
 			filepath.Join(programFiles, `Google\Chrome\Application\chrome.exe`),
