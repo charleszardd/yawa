@@ -40,9 +40,22 @@ var (
 
 type comObject struct{ vtable *[29]uintptr }
 
+type filterSpec struct {
+	name    *uint16
+	pattern *uint16
+}
+
 type Picker struct{}
 
 func (Picker) Select(_ context.Context, kind command.SelectionKind, startDirectory string) (string, bool, error) {
+	return selectPath(kind, startDirectory, false)
+}
+
+func (Picker) SelectExecutable(_ context.Context) (string, bool, error) {
+	return selectPath(command.SelectFile, os.Getenv("ProgramFiles"), true)
+}
+
+func selectPath(kind command.SelectionKind, startDirectory string, executableOnly bool) (string, bool, error) {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 
@@ -69,6 +82,11 @@ func (Picker) Select(_ context.Context, kind command.SelectionKind, startDirecto
 	if err := dialog.callHRESULT(9, options); err != nil {
 		return "", false, fmt.Errorf("set picker options: %w", err)
 	}
+	if executableOnly {
+		if err := dialog.setExecutableFilter(); err != nil {
+			return "", false, err
+		}
+	}
 	if startDirectory != "" {
 		if err := dialog.setFolder(os.ExpandEnv(startDirectory)); err != nil {
 			return "", false, err
@@ -81,6 +99,22 @@ func (Picker) Select(_ context.Context, kind command.SelectionKind, startDirecto
 		return "", false, fmt.Errorf("show picker: %w", err)
 	}
 	return dialog.resultPath()
+}
+
+func (object *comObject) setExecutableFilter() error {
+	filterName, err := windows.UTF16PtrFromString("Applications (*.exe)")
+	if err != nil {
+		return fmt.Errorf("encode executable filter name: %w", err)
+	}
+	filterPattern, err := windows.UTF16PtrFromString("*.exe")
+	if err != nil {
+		return fmt.Errorf("encode executable filter pattern: %w", err)
+	}
+	filter := filterSpec{name: filterName, pattern: filterPattern}
+	if err := object.callHRESULT(4, 1, uintptr(unsafe.Pointer(&filter))); err != nil {
+		return fmt.Errorf("set executable picker filter: %w", err)
+	}
+	return nil
 }
 
 func initializeCOM() (bool, error) {

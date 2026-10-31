@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/charleszardd/yawa/internal/appcatalog"
 	"github.com/charleszardd/yawa/internal/command"
 	"github.com/charleszardd/yawa/internal/config"
+	"github.com/charleszardd/yawa/internal/dialogs"
 )
 
 type Service struct {
@@ -22,6 +24,29 @@ type Snapshot struct {
 
 func NewService(configPath string, dispatcher command.Dispatcher) *Service {
 	return &Service{configPath: configPath, store: config.NewStore(), dispatcher: dispatcher}
+}
+
+func (service *Service) Applications() []appcatalog.Application {
+	applications := appcatalog.InstalledApplications()
+	if applications == nil {
+		return []appcatalog.Application{}
+	}
+	return applications
+}
+
+func (service *Service) ResolveExecutable(value string) appcatalog.ExecutableStatus {
+	return appcatalog.ResolveExecutable(value)
+}
+
+func (service *Service) BrowseExecutable() (string, error) {
+	path, selected, err := (dialogs.Picker{}).SelectExecutable(context.Background())
+	if err != nil {
+		return "", err
+	}
+	if !selected {
+		return "", nil
+	}
+	return path, nil
 }
 
 func (service *Service) Load() (Snapshot, error) {
