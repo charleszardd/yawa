@@ -50,8 +50,11 @@ func main() {
 			UniqueId: "4f9ca656-9425-4c03-a53a-f72368391be1",
 		},
 		Windows: &windowsoptions.Options{
-			WebviewUserDataPath: webviewDataPath,
-			Theme:               windowsoptions.Dark,
+			WebviewUserDataPath:  webviewDataPath,
+			WebviewIsTransparent: false,
+			WindowIsTranslucent:  false,
+			WebviewGpuIsDisabled: true,
+			Theme:                windowsoptions.Dark,
 		},
 	})
 	if err != nil {
