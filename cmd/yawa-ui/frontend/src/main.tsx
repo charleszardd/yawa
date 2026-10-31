@@ -40,7 +40,7 @@ function App(){
   const toggleStartWithWindows=async(enabled:boolean)=>{setAgentBusy(true);setError('');try{await service().SetStartWithWindows(enabled);setNotice(enabled?'Yawa will start when you sign in to Windows.':'Automatic startup disabled.')}catch(e){setError(String(e))}finally{setAgentBusy(false);await refreshAgentStatus()}};
   return <div className="shell">
     <aside>
-      <div className="brand"><span className="brandmark"><Zap size={19}/></span><div><strong>yawa</strong><small>shortcut control</small></div></div>
+      <div className="brand"><span className="brandmark"><img src="/yawa-logo.png" alt=""/></span><div><strong>yawa</strong><small>shortcut control</small></div></div>
       <button className="new" onClick={create}><Plus size={17}/> New command</button>
       <div className="search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search commands"/></div>
       <div className="command-list">{filtered.map(c=><button key={c.name} className={selected===c.name?'active':''} onClick={()=>edit(c)}><span className="command-icon"><Command size={16}/></span><span><strong>{c.name}</strong><small>{c.description||c.type}</small></span>{c.hotkey&&<kbd>{c.hotkey}</kbd>}</button>)}{!filtered.length&&<p className="empty">No commands found.</p>}</div>

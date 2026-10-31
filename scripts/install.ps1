@@ -56,6 +56,7 @@ function New-YawaShortcut {
     $shortcut = $shell.CreateShortcut($shortcutPath)
     $shortcut.TargetPath = $ExecutablePath
     $shortcut.WorkingDirectory = $WorkingDirectory
+    $shortcut.IconLocation = "$ExecutablePath,0"
     $shortcut.Description = "Customize Yawa launcher commands and hotkeys"
     $shortcut.Save()
     return $shortcutPath

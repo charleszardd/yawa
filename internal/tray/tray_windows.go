@@ -44,6 +44,7 @@ const (
 
 	defaultApplicationIcon = 32512
 	defaultArrowCursor     = 32512
+	applicationIconID      = 1
 )
 
 var (
@@ -177,7 +178,10 @@ func (application *Application) createWindow() error {
 	if err != nil {
 		return err
 	}
-	application.icon, _, _ = loadIcon.Call(0, defaultApplicationIcon)
+	application.icon, _, _ = loadIcon.Call(instance, applicationIconID)
+	if application.icon == 0 {
+		application.icon, _, _ = loadIcon.Call(0, defaultApplicationIcon)
+	}
 	cursor, _, _ := loadCursor.Call(0, defaultArrowCursor)
 	class := windowClass{
 		Size:            uint32(unsafe.Sizeof(windowClass{})),
