@@ -18,6 +18,7 @@ type commandOptions struct {
 	path        string
 	url         string
 	hotkey      string
+	startDir    string
 }
 
 func (app *application) newCommandManagementCommand() *cobra.Command {
@@ -121,6 +122,7 @@ func (options *commandOptions) bind(configuredCommand *cobra.Command) {
 	flags.StringVar(&options.path, "path", "", "file or directory to open")
 	flags.StringVar(&options.url, "url", "", "HTTPS URL to open")
 	flags.StringVar(&options.hotkey, "hotkey", "", "global shortcut reserved for a later phase")
+	flags.StringVar(&options.startDir, "start-dir", "", "initial directory for a file or folder picker")
 }
 
 func (options commandOptions) definition(name string) command.Definition {
@@ -128,6 +130,7 @@ func (options commandOptions) definition(name string) command.Definition {
 		Name: name, Description: options.description, Type: command.Type(options.typeName),
 		Executable: options.executable, Arguments: options.arguments, WorkingDir: options.workingDir,
 		Path: options.path, URL: options.url, Hotkey: options.hotkey,
+		StartDir: options.startDir,
 	}
 }
 
@@ -155,6 +158,9 @@ func (options commandOptions) applyChangedFlags(cmd *cobra.Command, configuredCo
 	}
 	if cmd.Flags().Changed("hotkey") {
 		configuredCommand.Hotkey = options.hotkey
+	}
+	if cmd.Flags().Changed("start-dir") {
+		configuredCommand.StartDir = options.startDir
 	}
 }
 
@@ -184,6 +190,7 @@ func writeCommand(output interface{ Write([]byte) (int, error) }, configuredComm
 		"path: " + configuredCommand.Path,
 		"url: " + configuredCommand.URL,
 		"hotkey: " + configuredCommand.Hotkey,
+		"start directory: " + configuredCommand.StartDir,
 	}
 	_, err := fmt.Fprintln(output, strings.Join(lines, "\n"))
 	return err

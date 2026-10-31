@@ -3,9 +3,11 @@ package command
 type Type string
 
 const (
-	TypeExec     Type = "exec"
-	TypeOpenPath Type = "open_path"
-	TypeURL      Type = "url"
+	TypeExec       Type = "exec"
+	TypePickFolder Type = "pick_folder"
+	TypePickFile   Type = "pick_file"
+	TypeOpenPath   Type = "open_path"
+	TypeURL        Type = "url"
 )
 
 type Definition struct {
@@ -18,4 +20,5 @@ type Definition struct {
 	Path        string   `toml:"path,omitempty"`
 	URL         string   `toml:"url,omitempty"`
 	Hotkey      string   `toml:"hotkey,omitempty"`
+	StartDir    string   `toml:"start_dir,omitempty"`
 }

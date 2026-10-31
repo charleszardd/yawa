@@ -8,6 +8,7 @@ import (
 
 	"github.com/charleszardd/yawa/internal/command"
 	"github.com/charleszardd/yawa/internal/config"
+	"github.com/charleszardd/yawa/internal/dialogs"
 	"github.com/charleszardd/yawa/internal/launcher"
 	"github.com/spf13/cobra"
 )
@@ -31,7 +32,7 @@ func Execute(version string, stdout io.Writer, stderr io.Writer) error {
 		configPath: configPath,
 		store:      config.NewStore(),
 		launcher:   windowsLauncher,
-		dispatcher: command.NewDispatcher(windowsLauncher),
+		dispatcher: command.NewDispatcher(windowsLauncher, dialogs.Picker{}),
 		stdout:     stdout,
 	}
 	rootCommand := app.newRootCommand(version)

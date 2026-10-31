@@ -40,12 +40,20 @@ func validateCommand(commandPath string, configuredCommand command.Definition, s
 	seenNames[normalizedName] = struct{}{}
 
 	switch configuredCommand.Type {
-	case command.TypeExec:
+	case command.TypeExec, command.TypePickFolder, command.TypePickFile:
 		if strings.TrimSpace(configuredCommand.Executable) == "" {
-			validationErrors = append(validationErrors, fmt.Errorf("%s.executable is required for exec", commandPath))
+			validationErrors = append(validationErrors, fmt.Errorf("%s.executable is required for %s", commandPath, configuredCommand.Type))
 		}
 		if configuredCommand.WorkingDir != "" {
 			validationErrors = append(validationErrors, validateDirectory(commandPath+".working_dir", configuredCommand.WorkingDir)...)
+		}
+		if configuredCommand.Type != command.TypeExec {
+			if !containsPlaceholder(configuredCommand.Arguments) {
+				validationErrors = append(validationErrors, fmt.Errorf("%s.args must contain %s", commandPath, command.SelectedPathPlaceholder))
+			}
+			if configuredCommand.StartDir != "" {
+				validationErrors = append(validationErrors, validateDirectory(commandPath+".start_dir", configuredCommand.StartDir)...)
+			}
 		}
 	case command.TypeOpenPath:
 		if strings.TrimSpace(configuredCommand.Path) == "" {
@@ -57,6 +65,15 @@ func validateCommand(commandPath string, configuredCommand command.Definition, s
 		validationErrors = append(validationErrors, fmt.Errorf("%s.type %q is unsupported", commandPath, configuredCommand.Type))
 	}
 	return validationErrors
+}
+
+func containsPlaceholder(arguments []string) bool {
+	for _, argument := range arguments {
+		if strings.Contains(argument, command.SelectedPathPlaceholder) {
+			return true
+		}
+	}
+	return false
 }
 
 func validateDirectory(fieldPath string, directoryPath string) []error {

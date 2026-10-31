@@ -3,6 +3,14 @@ config_version = 1
 log_level = "info"
 
 [[commands]]
+name = "code"
+description = "Choose a folder and open it in VS Code"
+type = "pick_folder"
+executable = "code"
+args = ["--new-window", "{selected_path}"]
+hotkey = "Ctrl+Alt+1"
+
+[[commands]]
 name = "calculator"
 description = "Open Windows Calculator"
 type = "exec"
