@@ -384,6 +384,8 @@ go build -tags production -o .\dist\yawa-ui.exe .\cmd\yawa-ui
 
 Windows 11 normally includes the required WebView2 runtime. Use `wails doctor` if the UI cannot initialize its webview.
 
+If a blank Yawa window remains after an earlier failed launch, close every existing Yawa window and run `make ui` again. Yawa uses a single-instance lock and stores WebView2 state in the stable, writable `%LOCALAPPDATA%\yawa\webview2` directory so `go run` does not depend on a temporary executable directory.
+
 Yawa writes bounded, structured JSON logs to `%LOCALAPPDATA%\yawa\yawa.log`; the previous file is retained as `yawa.log.1` after rotation. Command names, types, and errors are logged, but argument arrays are deliberately omitted.
 
 Exit codes are stable for automation:
