@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/branding/yawa-logo-master.png" alt="Yawa logo" width="120">
+</p>
+
 # yawa - a customizable Windows hotkey launcher
 
 **Why “yawa”?** `Yawa` is the Bisaya word I blurt out when a laptop full of open apps freezes while I am searching for—or reopening—something. Yawa turns that frustration into configurable commands and global shortcuts.
@@ -69,24 +73,6 @@ This is a good project for Go and a useful Windows tool. It has a narrow core an
 The main engineering risks are not raw performance. They are shortcut conflicts, Windows thread-affinity rules, quoting paths correctly, duplicate resident agents, configuration corruption, and actions that block the Win32 message loop. The architecture below addresses those risks from the start.
 
 The product stays intentionally small: one command registry with CLI, UI, and hotkey invocation paths. The v1 tray, startup integration, and live reload all reuse that core.
-
-## Goals and non-goals
-
-### MVP goals
-
-1. Focused Windows executables written in Go: CLI, settings UI, and headless background agent.
-2. `run`, `list`, `validate`, `config path`, and `agent` subcommands.
-3. User-editable command aliases and shortcut bindings.
-4. Global shortcut listener (`RegisterHotKey` + Windows message loop).
-5. Generic app/file/folder/URL launcher with optional native file or folder picker, not hardcoded to VS Code.
-6. Create/edit/delete commands via CLI as well as by editing TOML.
-7. Safe application execution without passing input through `cmd.exe` by default.
-8. Helpful errors and logs for missing apps, invalid configuration, and hotkey conflicts.
-
-### Not in v1.0
-
-- Floating search UI, plugin marketplace, macros, arbitrary script downloads.
-- macOS and Linux support (Windows-only to start).
 
 ## Tech stack
 
@@ -294,37 +280,6 @@ downloads       Ctrl+Alt+D    Open Downloads
 github          Ctrl+Alt+G    Open GitHub
 ```
 
-## Suggested project structure
-
-```text
-yawa/
-├── README.md
-├── go.mod
-├── go.sum
-├── cmd/
-│   ├── yawa/                    # CLI entry point
-│   ├── yawa-agent/              # Headless tray agent
-│   └── yawa-ui/                 # Wails settings UI + React frontend
-├── internal/
-│   ├── cli/                     # run/list/validate/config commands
-│   ├── config/                  # load, parse, validate TOML
-│   ├── command/                 # registry and action dispatcher
-│   ├── launcher/                # generic app, path, and URL invocation
-│   ├── hotkey/                  # Windows RegisterHotKey + message loop
-│   ├── background/              # Agent lifecycle and startup registration
-│   ├── agentcontrol/            # Named mutex and control/readiness events
-│   ├── tray/                    # Native Windows notification-area UI
-│   └── dialogs/                 # Native file and folder pickers
-├── configs/
-│   └── example.toml
-├── scripts/
-│   └── build.ps1
-└── tests/
-    └── integration/           # Windows integration tests
-```
-
-Use Windows build tags (`//go:build windows`) for native OS modules, and keep parsing, validation, and registry code platform-neutral where practical.
-
 ## Developer setup (Windows 11)
 
 Prerequisites:
@@ -380,29 +335,6 @@ make build
 
 The Go module path is `github.com/charleszardd/yawa` and must stay aligned with the repository URL.
 
-### Production build
-
-The build script runs the frontend build, test suite, and static analysis before producing three stripped executables and SHA-256 checksums:
-
-```powershell
-.\scripts\build.ps1 -Version "v1.0.0"
-Get-Content .\dist\SHA256SUMS
-```
-
-Keep `yawa.exe`, `yawa-agent.exe`, and `yawa-ui.exe` together in a stable per-user directory such as `%LOCALAPPDATA%\Programs\yawa`. The UI locates the agent beside itself. Do not run Yawa as administrator for normal use.
-
-### Publish a GitHub release
-
-Tags matching `v*.*.*` trigger the Windows release workflow. It repeats the production checks, creates `yawa-windows-amd64.zip`, publishes its SHA-256 checksum and installer, and creates the GitHub Release.
-
-```powershell
-git push origin main
-git tag -a v1.0.0 -m "Yawa v1.0.0"
-git push origin v1.0.0
-```
-
-Use a new semantic version for every release; do not move or reuse an existing tag. The workflow is defined in `.github\workflows\release.yml`.
-
 ### Desktop customization UI
 
 Launch the Wails settings application after building:
@@ -446,60 +378,6 @@ For daily use, activate global shortcuts from Yawa UI and optionally enable **St
 
 **Make the command available everywhere:** Add the absolute `yawa\bin` directory to your user `PATH`, open a fresh terminal, then run `yawa list`. Do not overwrite the existing PATH value.
 
-## Implementation plan
-
-### Phase 1 — Generic action engine and CLI
-
-- Define a typed command registry and action interface. Do not include VS Code-specific logic.
-- Implement the `exec`, `open_path`, and `url` action types; support arbitrary configured installed apps, arguments, and optional `working_dir`.
-- Add `list`, `run`, `validate`, `config path`, and `version`.
-- For executables use `exec.Command(executable, args...)`; for default-associated files, folders, and URLs use Windows shell APIs.
-- Validate types, named commands, file paths, and executable resolution.
-- Test launching unrelated apps (e.g. Calculator), opening a directory, and opening a PDF/URL.
-
-**Acceptance:** `yawa run calculator` launches Calculator and `yawa run downloads` opens Downloads. Neither is coded as a special case.
-
-### Phase 2 — User-defined commands and persistence
-
-- Implement `yawa command add`, `edit`, `show`, `remove` with type-specific flags and interactive prompts where necessary.
-- Permit users to choose **which app**, saved file/path, arguments, starting directory, working directory, and optional hotkey.
-- Validate and atomically write TOML via a temporary file and rename; back up config before changes and avoid overwriting concurrent edits.
-- Support edit-by-file (`config edit`) for advanced configurations without recompiling.
-- Test creating, updating, removing, and persisting aliases across restarts.
-
-**Acceptance:** A user can add a command for a new `.exe` entirely through CMD, run it, modify its arguments/hotkey, and remove it without changing Go source.
-
-### Phase 3 — Native file and folder pickers for any app
-
-- Implement Windows COM dialogs for both folder and file selection.
-- Add `pick_folder` and `pick_file` actions with configurable `executable` and `args`.
-- Substitute `{selected_path}` as a single argument; support Unicode and paths with spaces.
-- Cancel cleanly without launching an app; gracefully report incompatible arguments.
-- Test folder → VS Code, file → Paint, and folder/file → another custom configured application.
-
-**Acceptance:** `yawa run code` opens VS Code with the chosen folder; `yawa run edit-image` opens the selected image in Paint. Both use the same generic picker dispatcher.
-
-### Phase 4 — Global keyboard shortcut agent
-
-- Parse configurable hotkeys (e.g. `Ctrl+Alt+1`, `Ctrl+Alt+I`) to Win32 modifiers and keycodes; use `MOD_NOREPEAT`.
-- Register via `RegisterHotKey` and process messages in a dedicated Windows thread/message loop.
-- Dispatch hotkey invocations to the **same action engine** used by `yawa run`.
-- Log collisions, deregister on shutdown, prevent duplicate agents with a per-user named mutex, and keep all action work off the message-loop thread.
-- Use a bounded work queue and debounce repeated launches so a held or repeatedly pressed key cannot create an unbounded number of processes.
-- Support new key bindings by reloading the managed background agent; retain restart behavior for the terminal-mode diagnostic agent.
-
-**Acceptance:** With either the managed background agent or `yawa agent`, a configured `Ctrl+Alt+1` launches the folder picker and `Ctrl+Alt+I` launches the file picker, even when CMD is unfocused.
-
-### Phase 5 — Reliability, build, and distribution
-
-- Add structured logs, redaction for sensitive arguments, informative errors, and meaningful exit codes.
-- Include config examples for VS Code, Visual Studio IDE, Windows Explorer, Paint, media players, and arbitrary `.exe` apps.
-- Add tests for bad paths, missing applications, invalid TOML, duplicate shortcuts, Unicode paths, process arguments, and cancellation.
-- Build and document `yawa.exe`, PATH installation, required user permissions, and a Windows 11 smoke test.
-- Possible follow-ups: fuzzy search overlay, command history, import/export, and signed installers.
-
-**Acceptance:** New commands and hotkeys are added without code edits, VS Code is optional, and a different Windows 11 machine can configure its own apps and paths independently.
-
 ## Reliability and security guidelines
 
 - **No implicit shell execution:** Do not run `cmd /c` or PowerShell for arbitrary user-entered strings. Shell-specific actions can be added later as an explicit, clearly labeled command type.
@@ -521,7 +399,6 @@ For daily use, activate global shortcuts from Yawa UI and optionally enable **St
 - [X] Users can create, update, inspect, and delete arbitrary named commands using CMD or TOML.
 - [X] A command can launch **any configured application** with arguments, or open a file, folder, or URL.
 - [X] Both file and folder pickers use the generic application dispatcher—not VS Code-specific code.
-- [X] The production build creates checksum-verified CLI, UI, and headless-agent executables suitable for per-user installation.
 - [X] `yawa run code` uses the native Windows folder picker and passes the selected folder as one argument.
 - [X] A configured command can open a saved project/solution in any selected IDE without a picker.
 - [X] `yawa agent` registers `Ctrl+Alt+1` and other valid configured hotkeys.
