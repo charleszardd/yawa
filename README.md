@@ -1,10 +1,14 @@
 # yawa — a customizable Windows hotkey launcher
 
+**Why “yawa”?** `Yawa` is a Bisaya expression Charles often blurts out when an overloaded laptop freezes just as he is trying to find or reopen an app. This launcher turns that frustration into one configurable command or global shortcut.
+
 > A fast, local-first Windows 11 launcher built with Go. Open projects, applications, folders, files, and URLs from the terminal or configurable global shortcuts.
 
 Yawa includes two executables: `yawa.exe` for the CLI and resident hotkey agent, and `yawa-ui.exe` for visual command customization. Both operate on the same configuration file.
 
 ## Install on Windows 11
+
+### Install from a GitHub Release (recommended)
 
 Download the installer from the latest GitHub Release, then run it. The installer verifies the release archive's SHA-256 checksum, installs both executables under `%LOCALAPPDATA%\Programs\yawa`, adds that directory to your user `PATH`, and creates a **Yawa UI** Start menu shortcut.
 
@@ -16,6 +20,17 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installer
 
 Open a new terminal after installation. Start the editor with `yawa-ui` and keep global shortcuts active with `yawa agent`. Yawa does not require administrator privileges and does not automatically add itself to Windows startup.
 
+### Install directly from GitHub with Go
+
+Use `go install`, not `go get`. This requires Go to be installed and the GitHub repository to be public, or your machine to be authenticated for the private repository.
+
+```powershell
+go install github.com/charleszardd/yawa/cmd/yawa@latest
+go install -tags production github.com/charleszardd/yawa/cmd/yawa-ui@latest
+```
+
+Go writes both executables to `$(go env GOPATH)\bin`. Add that directory to your user `PATH`, open a new terminal, then run `yawa-ui` or `yawa agent`. Pin a release such as `@v0.1.0` instead of `@latest` when you need a reproducible installation.
+
 ## Overview
 
 `yawa` is a small Windows `.exe` that lets you:
@@ -25,8 +40,6 @@ Open a new terminal after installation. Start the editor with `yawa-ui` and keep
 - Optionally select a folder or file and pass its path to **any configured app** (VS Code, Visual Studio, Explorer, Photoshop, VLC, etc.).
 - Customize command aliases, target app executable paths, arguments, paths, working directories, and hotkeys through a TOML file or CLI management commands—no recompilation.
 - Keep a background hotkey agent running in the Windows system tray (later milestone), or start it from a terminal.
-
-The name comes from a Bisaya expression Charles often uses when software gets annoying. The product goal follows from that: remove small, repeated annoyances without becoming another heavy launcher.
 
 **Example experience:**
 
