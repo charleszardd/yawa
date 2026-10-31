@@ -1,6 +1,6 @@
-# yawa — a customizable Windows hotkey launcher
+# yawa - a customizable Windows hotkey launcher
 
-**Why “yawa”?** `Yawa` is a Bisaya expression Charles often blurts out when an overloaded laptop freezes just as he is trying to find or reopen an app. This launcher turns that frustration into one configurable command or global shortcut.
+**Why “yawa”?** `Yawa` is a Bisaya expression I often blurts out when an overloaded laptop freezes just as I am trying to find or reopen an app. This launcher turns that frustration into one configurable command or global shortcut.
 
 > A fast, local-first Windows 11 launcher built with Go. Open projects, applications, folders, files, and URLs from the terminal or configurable global shortcuts.
 
@@ -90,16 +90,16 @@ The initial product should stay intentionally small: a command registry plus two
 
 ## Tech stack
 
-| Layer | Choice | Purpose |
-|---|---|---|
-| Language | Go | Build a single `.exe` and implement the CLI, config, and execution engine |
-| CLI | Cobra | Stable subcommands, validation, help, and shell completion |
-| Config | TOML parser, e.g. `github.com/BurntSushi/toml` | Read human-friendly command definitions |
-| Windows integration | `golang.org/x/sys/windows` / small Windows-specific wrapper | Register and dispatch global hotkeys using Win32 APIs |
-| Picker | Windows native file/folder dialog (`IFileOpenDialog`; `FOS_PICKFOLDERS` for folders) | Pick a file or directory for any command |
-| Execution | `os/exec`, `exec.Command` | Launch programs using explicit executable and argument arrays |
-| Data storage | `%APPDATA%\yawa\config.toml` | Versioned per-user configuration |
-| Logging | `log/slog` | Structured local logs with sensitive arguments omitted |
+| Layer               | Choice                                                                                   | Purpose                                                                     |
+| ------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Language            | Go                                                                                       | Build a single `.exe` and implement the CLI, config, and execution engine |
+| CLI                 | Cobra                                                                                    | Stable subcommands, validation, help, and shell completion                  |
+| Config              | TOML parser, e.g. `github.com/BurntSushi/toml`                                         | Read human-friendly command definitions                                     |
+| Windows integration | `golang.org/x/sys/windows` / small Windows-specific wrapper                            | Register and dispatch global hotkeys using Win32 APIs                       |
+| Picker              | Windows native file/folder dialog (`IFileOpenDialog`; `FOS_PICKFOLDERS` for folders) | Pick a file or directory for any command                                    |
+| Execution           | `os/exec`, `exec.Command`                                                            | Launch programs using explicit executable and argument arrays               |
+| Data storage        | `%APPDATA%\yawa\config.toml`                                                           | Versioned per-user configuration                                            |
+| Logging             | `log/slog`                                                                             | Structured local logs with sensitive arguments omitted                      |
 
 **Note:** Windows API message loops and COM dialogs require careful OS-thread handling in Go. Keep them in dedicated Windows-only modules; lock the relevant goroutine to an OS thread using `runtime.LockOSThread()` when appropriate and initialize COM for dialogs correctly.
 
@@ -148,13 +148,13 @@ The initial product should stay intentionally small: a command registry plus two
 
 Every command is a user-defined alias to an **action**. None of the actions know anything special about VS Code.
 
-| Type | Behavior | Example |
-|---|---|---|
-| `exec` | Run a specific executable with an argument array; optionally inject a saved path | Open VS Code, Visual Studio, Blender, Photoshop, or a custom `.exe` |
-| `pick_folder` | Show native folder picker, then invoke any target executable with the selected path | Pick repository → VS Code; pick folder → Explorer or another IDE |
-| `pick_file` | Show native file picker, then invoke any target executable with selected file | Pick image → paint app; pick video → VLC |
-| `open_path` | Open a configured file or directory with its Windows default associated application, or Explorer | Open Downloads, a PDF, or a spreadsheet |
-| `url` | Open a valid URL in default browser | GitHub, documentation |
+| Type            | Behavior                                                                                         | Example                                                               |
+| --------------- | ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| `exec`        | Run a specific executable with an argument array; optionally inject a saved path                 | Open VS Code, Visual Studio, Blender, Photoshop, or a custom `.exe` |
+| `pick_folder` | Show native folder picker, then invoke any target executable with the selected path              | Pick repository → VS Code; pick folder → Explorer or another IDE    |
+| `pick_file`   | Show native file picker, then invoke any target executable with selected file                    | Pick image → paint app; pick video → VLC                            |
+| `open_path`   | Open a configured file or directory with its Windows default associated application, or Explorer | Open Downloads, a PDF, or a spreadsheet                               |
+| `url`         | Open a valid URL in default browser                                                              | GitHub, documentation                                                 |
 
 The `executable` can be an absolute path (recommended for GUI apps), or a known application available on PATH. Use `exec.Command` with separate arguments; for Windows shell-associated files/URLs, use `ShellExecuteEx` or equivalent. A selected path is substituted into **one** argument, never concatenated into shell text.
 
@@ -427,14 +427,14 @@ Yawa writes bounded, structured JSON logs to `%LOCALAPPDATA%\yawa\yawa.log`; the
 
 Exit codes are stable for automation:
 
-| Code | Meaning |
-|---:|---|
-| `0` | Success |
-| `1` | General/internal failure |
+|  Code | Meaning                        |
+| ----: | ------------------------------ |
+| `0` | Success                        |
+| `1` | General/internal failure       |
 | `2` | Invalid configuration or usage |
-| `3` | Command not found |
-| `4` | Action launch failure |
-| `5` | Hotkey agent failure |
+| `3` | Command not found              |
+| `4` | Action launch failure          |
+| `5` | Hotkey agent failure           |
 
 To activate global shortcuts, run `yawa agent`. For unattended daily use, create a normal-user logon task that starts `yawa agent`; automatic startup and tray management remain planned UI conveniences rather than requirements for the core agent.
 
@@ -512,22 +512,20 @@ To activate global shortcuts, run `yawa agent`. For unattended daily use, create
 
 ## Success criteria
 
-- [x] Users can create, update, inspect, and delete arbitrary named commands using CMD or TOML.
-- [x] A command can launch **any configured application** with arguments, or open a file, folder, or URL.
-- [x] Both file and folder pickers use the generic application dispatcher—not VS Code-specific code.
-
-- [x] The production build creates a standalone `yawa.exe` suitable for a directory on `PATH`.
-- [x] `yawa run code` uses the native Windows folder picker and passes the selected folder as one argument.
-- [x] A configured command can open a saved project/solution in any selected IDE without a picker.
-- [x] `yawa agent` registers `Ctrl+Alt+1` and other valid configured hotkeys.
-- [x] Hotkeys work while CMD is unfocused, provided they are not reserved or intercepted.
-- [x] Commands and hotkeys can be changed in `config.toml` without recompilation.
-- [x] Invalid configuration and shortcut collisions produce actionable error messages.
-- [x] Closing the agent unregisters its hotkeys.
+- [X] Users can create, update, inspect, and delete arbitrary named commands using CMD or TOML.
+- [X] A command can launch **any configured application** with arguments, or open a file, folder, or URL.
+- [X] Both file and folder pickers use the generic application dispatcher—not VS Code-specific code.
+- [X] The production build creates a standalone `yawa.exe` suitable for a directory on `PATH`.
+- [X] `yawa run code` uses the native Windows folder picker and passes the selected folder as one argument.
+- [X] A configured command can open a saved project/solution in any selected IDE without a picker.
+- [X] `yawa agent` registers `Ctrl+Alt+1` and other valid configured hotkeys.
+- [X] Hotkeys work while CMD is unfocused, provided they are not reserved or intercepted.
+- [X] Commands and hotkeys can be changed in `config.toml` without recompilation.
+- [X] Invalid configuration and shortcut collisions produce actionable error messages.
+- [X] Closing the agent unregisters its hotkeys.
 
 ## Future direction
 
 yawa starts as a keyboard-first CLI utility, **not a full desktop search app**. Once the CLI and hotkey agent are stable, a search overlay or settings interface can be added without replacing the command-dispatch core.
 
 **Project philosophy:** One registry, multiple ways to invoke it—terminal commands today, keyboard shortcuts always, and an optional UI later.
-
