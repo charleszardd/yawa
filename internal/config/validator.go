@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/charleszardd/yawa/internal/command"
+	"github.com/charleszardd/yawa/internal/hotkey"
 )
 
 var commandNamePattern = regexp.MustCompile(`^[a-z0-9]+(?:-[a-z0-9]+)*$`)
@@ -21,11 +22,29 @@ func Validate(configuration File) error {
 	}
 
 	seenNames := make(map[string]struct{}, len(configuration.Commands))
+	seenHotkeys := make(map[string]string, len(configuration.Commands))
 	for index, configuredCommand := range configuration.Commands {
 		commandPath := fmt.Sprintf("commands[%d]", index)
 		validationErrors = append(validationErrors, validateCommand(commandPath, configuredCommand, seenNames)...)
+		validationErrors = append(validationErrors, validateHotkey(commandPath, configuredCommand, seenHotkeys)...)
 	}
 	return errors.Join(validationErrors...)
+}
+
+func validateHotkey(commandPath string, configuredCommand command.Definition, seen map[string]string) []error {
+	if configuredCommand.Hotkey == "" {
+		return nil
+	}
+	binding, err := hotkey.Parse(configuredCommand.Hotkey)
+	if err != nil {
+		return []error{fmt.Errorf("%s.hotkey: %w", commandPath, err)}
+	}
+	canonical := hotkey.Canonical(binding)
+	if existing, duplicate := seen[canonical]; duplicate {
+		return []error{fmt.Errorf("%s.hotkey duplicates command %q", commandPath, existing)}
+	}
+	seen[canonical] = configuredCommand.Name
+	return nil
 }
 
 func validateCommand(commandPath string, configuredCommand command.Definition, seenNames map[string]struct{}) []error {

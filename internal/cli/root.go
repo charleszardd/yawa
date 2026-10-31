@@ -4,11 +4,15 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
+	"os/signal"
+	"syscall"
 	"text/tabwriter"
 
 	"github.com/charleszardd/yawa/internal/command"
 	"github.com/charleszardd/yawa/internal/config"
 	"github.com/charleszardd/yawa/internal/dialogs"
+	"github.com/charleszardd/yawa/internal/hotkey"
 	"github.com/charleszardd/yawa/internal/launcher"
 	"github.com/spf13/cobra"
 )
@@ -58,8 +62,27 @@ func (app *application) newRootCommand(version string) *cobra.Command {
 		app.newValidateCommand(),
 		app.newConfigCommand(),
 		app.newCommandManagementCommand(),
+		app.newAgentCommand(),
 	)
 	return rootCommand
+}
+
+func (app *application) newAgentCommand() *cobra.Command {
+	return &cobra.Command{
+		Use:   "agent",
+		Short: "Run the global hotkey agent",
+		Args:  cobra.NoArgs,
+		RunE: func(_ *cobra.Command, _ []string) error {
+			registry, err := app.loadRegistry()
+			if err != nil {
+				return err
+			}
+			ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+			defer stop()
+			fmt.Fprintln(app.stdout, "yawa agent is running; press Ctrl+C to stop")
+			return hotkey.NewAgent(app.dispatcher, app.stdout).Run(ctx, registry)
+		},
+	}
 }
 
 func (app *application) newListCommand() *cobra.Command {
