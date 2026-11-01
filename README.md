@@ -10,6 +10,20 @@
 
 Yawa v1 ships three focused executables: `yawa.exe` for the CLI, `yawa-ui.exe` for visual customization, and the headless `yawa-agent.exe` for global shortcuts and the system tray. All three use the same local configuration file.
 
+## Yawa UI
+
+![Yawa UI configuring a VS Code project shortcut](assets/screenshots/yawa-ui-vscode-project.png)
+
+The UI turns a repeated workflow into one global shortcut. In the example above, Yawa opens a saved repository directly in a new VS Code window:
+
+1. Create an `Exec` command and give it a memorable name.
+2. Set **Application** to `code`, the VS Code command-line interface.
+3. Enter `--new-window` and the repository path as separate arguments, one per line.
+4. Assign an available shortcut, save the command, and start or reload the background agent.
+5. Press the shortcut from any application to launch the configured project.
+
+The same interface can launch other applications, open files or folders, and send URLs to the default browser. See [Open a saved project in VS Code](#open-a-saved-project-in-vs-code) for the complete configuration.
+
 ## Install on Windows 11
 
 ### Install from a GitHub Release (recommended)
