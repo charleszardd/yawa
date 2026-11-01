@@ -36,6 +36,28 @@ func (launcherStub) Execute(context.Context, string, []string, string) error { r
 func (launcherStub) OpenPath(string) error                                   { return nil }
 func (launcherStub) OpenURL(string) error                                    { return nil }
 
+type launcherSpy struct {
+	launcherStub
+	openedPath string
+}
+
+func (launcher *launcherSpy) OpenPath(path string) error {
+	launcher.openedPath = path
+	return nil
+}
+
+func TestServiceOpensWindowsAppsFolder(t *testing.T) {
+	launcher := &launcherSpy{}
+	service := NewService(filepath.Join(t.TempDir(), "config.toml"), command.NewDispatcher(launcher))
+
+	if err := service.OpenWindowsApps(); err != nil {
+		t.Fatalf("OpenWindowsApps() error = %v", err)
+	}
+	if launcher.openedPath != windowsAppsFolderPath {
+		t.Fatalf("OpenWindowsApps() path = %q, want %q", launcher.openedPath, windowsAppsFolderPath)
+	}
+}
+
 func TestServiceCommandLifecycle(t *testing.T) {
 	service := NewService(filepath.Join(t.TempDir(), "config.toml"), command.NewDispatcher(launcherStub{}))
 	configuredCommand := command.Definition{Name: "calculator", Type: command.TypeExec, Executable: "calc.exe", Hotkey: "Ctrl+Alt+C"}

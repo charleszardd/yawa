@@ -18,6 +18,8 @@ type Service struct {
 	dispatcher command.Dispatcher
 }
 
+const windowsAppsFolderPath = "shell:AppsFolder"
+
 type Snapshot struct {
 	ConfigPath string               `json:"configPath"`
 	Commands   []command.Definition `json:"commands"`
@@ -48,6 +50,14 @@ func (service *Service) BrowseExecutable() (string, error) {
 		return "", nil
 	}
 	return path, nil
+}
+
+func (service *Service) OpenWindowsApps() error {
+	return service.dispatcher.Dispatch(context.Background(), command.Definition{
+		Name: "windows-apps",
+		Type: command.TypeOpenPath,
+		Path: windowsAppsFolderPath,
+	})
 }
 
 func (service *Service) AgentStatus() background.Status {
