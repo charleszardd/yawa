@@ -183,7 +183,7 @@ Every command is a user-defined alias to an **action**. None of the actions know
 | `exec`        | Run a specific executable with an argument array; optionally inject a saved path                 | Open VS Code, Visual Studio, Blender, Photoshop, or a custom `.exe` |
 | `pick_folder` | Show native folder picker, then invoke any target executable with the selected path              | Pick repository → VS Code; pick folder → Explorer or another IDE    |
 | `pick_file`   | Show native file picker, then invoke any target executable with selected file                    | Pick image → paint app; pick video → VLC                            |
-| `open_path`   | Open a configured file or directory with its Windows default associated application, or Explorer | Open Downloads, a PDF, or a spreadsheet                               |
+| `open_path`   | Open a configured file, directory, or Windows shortcut (`.lnk`) with its associated application   | Open Downloads, a PDF, or a packaged-app shortcut                     |
 | `url`         | Open a valid URL in default browser                                                              | GitHub, documentation                                                 |
 
 The `executable` can be an absolute path (recommended for GUI apps), or a known application available on PATH. Applications with a dedicated CLI may require that CLI to process arguments; for example, use `code` rather than `Code.exe` when opening a VS Code project. Use `exec.Command` with separate arguments; for Windows shell-associated files/URLs, use `ShellExecuteEx` or equivalent. A selected path is substituted into **one** argument, never concatenated into shell text.
@@ -385,7 +385,7 @@ Launch the Wails settings application after building:
 .\dist\yawa-ui.exe
 ```
 
-The UI can create, search, edit, validate, test, and delete commands. It detects common installed applications, prefers the VS Code CLI so project arguments are handled correctly, provides a native `.exe` browser, and validates executable paths before saving. Fields change with the selected action type, and picker actions explain the required `{selected_path}` argument. Saved changes are written atomically to the same `%APPDATA%\yawa\config.toml` used by the CLI.
+The UI can create, search, edit, validate, test, and delete commands. It detects common installed applications, prefers the VS Code CLI so project arguments are handled correctly, provides a native `.exe` browser, and validates executable paths before saving. If a packaged app has no accessible `.exe`, select **Open Windows Apps** to open `shell:AppsFolder`, create a desktop shortcut, and configure that `.lnk` with **Open Path**. Fields change with the selected action type, and picker actions explain the required `{selected_path}` argument. Saved changes are written atomically to the same `%APPDATA%\yawa\config.toml` used by the CLI.
 
 Use the sidebar to start, reload, or stop the background agent. Saving a command reloads a running agent automatically. **Start with Windows** is opt-in and per-user. The settings window does not need to remain open for shortcuts to work; use the tray icon to reopen Yawa, reload shortcuts, or exit.
 
