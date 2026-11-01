@@ -4,6 +4,7 @@ import {AlertCircle, CheckCircle2, Command, ExternalLink, FolderOpen, Grid2X2, P
 import './style.css';
 import './executable.css';
 import './agent.css';
+import './sidebar.css';
 
 type ActionType='exec'|'pick_folder'|'pick_file'|'open_path'|'url';
 type CommandDefinition={name:string;description:string;type:ActionType;executable:string;args:string[];working_dir:string;path:string;url:string;hotkey:string;start_dir:string};

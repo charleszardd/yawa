@@ -1,0 +1,51 @@
+aside {
+  height: 100vh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.brand,
+.new,
+.search,
+.agent-card,
+.config-path {
+  flex-shrink: 0;
+}
+
+.command-list {
+  flex: 1 1 auto;
+  min-height: 72px;
+  max-height: min(46vh, 460px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: #465064 transparent;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  padding-right: 4px;
+  margin-bottom: 12px;
+}
+
+.command-list::-webkit-scrollbar {
+  width: 7px;
+}
+
+.command-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.command-list::-webkit-scrollbar-thumb {
+  background: #3b4558;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+}
+
+.command-list::-webkit-scrollbar-thumb:hover {
+  background: #566278;
+  background-clip: padding-box;
+}
+
+.agent-card {
+  margin: auto 0 12px;
+}
