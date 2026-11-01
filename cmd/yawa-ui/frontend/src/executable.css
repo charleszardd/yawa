@@ -51,3 +51,10 @@
 .field-status.valid {
   color: #78d7ae;
 }
+
+.action-help {
+  margin: 9px 0 0;
+  color: #7f8797;
+  font-size: 11px;
+  line-height: 1.45;
+}
