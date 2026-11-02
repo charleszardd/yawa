@@ -12,7 +12,7 @@ Yawa v1 ships three focused executables: `yawa.exe` for the CLI, `yawa-ui.exe` f
 
 ## Yawa UI
 
-![Yawa UI configuring a VS Code project shortcut](assets/screenshots/yawa-ui-vscode-project.png)
+![Yawa UI configuring a VS Code project shortcut](assets/screenshots/yawa-ui-v2.png)
 
 The UI turns a repeated workflow into one global shortcut. In the example above, Yawa opens a saved repository directly in a new VS Code window:
 
@@ -40,7 +40,7 @@ Open **Yawa UI** from the Start menu or run `yawa-ui` in a new terminal. Create 
 
 ### Install directly from GitHub with Go
 
-Use `go install`, not `go get`. This requires Go to be installed and the GitHub repository to be public, or your machine to be authenticated for the private repository.
+Use `go install`. This requires Go to be installed and the GitHub repository to be public, or your machine to be authenticated for the private repository.
 
 ```powershell
 go install github.com/charleszardd/yawa/cmd/yawa@latest
@@ -178,13 +178,13 @@ The product stays intentionally small: one command registry with CLI, UI, and ho
 
 Every command is a user-defined alias to an **action**. None of the actions know anything special about VS Code.
 
-| Type            | Behavior                                                                                         | Example                                                               |
-| --------------- | ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
-| `exec`        | Run a specific executable with an argument array; optionally inject a saved path                 | Open VS Code, Visual Studio, Blender, Photoshop, or a custom `.exe` |
-| `pick_folder` | Show native folder picker, then invoke any target executable with the selected path              | Pick repository → VS Code; pick folder → Explorer or another IDE    |
-| `pick_file`   | Show native file picker, then invoke any target executable with selected file                    | Pick image → paint app; pick video → VLC                            |
-| `open_path`   | Open a configured file, directory, or Windows shortcut (`.lnk`) with its associated application   | Open Downloads, a PDF, or a packaged-app shortcut                     |
-| `url`         | Open a valid URL in default browser                                                              | GitHub, documentation                                                 |
+| Type            | Behavior                                                                                          | Example                                                               |
+| --------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `exec`        | Run a specific executable with an argument array; optionally inject a saved path                  | Open VS Code, Visual Studio, Blender, Photoshop, or a custom `.exe` |
+| `pick_folder` | Show native folder picker, then invoke any target executable with the selected path               | Pick repository → VS Code; pick folder → Explorer or another IDE    |
+| `pick_file`   | Show native file picker, then invoke any target executable with selected file                     | Pick image → paint app; pick video → VLC                            |
+| `open_path`   | Open a configured file, directory, or Windows shortcut (`.lnk`) with its associated application | Open Downloads, a PDF, or a packaged-app shortcut                     |
+| `url`         | Open a valid URL in default browser                                                               | GitHub, documentation                                                 |
 
 The `executable` can be an absolute path (recommended for GUI apps), or a known application available on PATH. Applications with a dedicated CLI may require that CLI to process arguments; for example, use `code` rather than `Code.exe` when opening a VS Code project. Use `exec.Command` with separate arguments; for Windows shell-associated files/URLs, use `ShellExecuteEx` or equivalent. A selected path is substituted into **one** argument, never concatenated into shell text.
 
